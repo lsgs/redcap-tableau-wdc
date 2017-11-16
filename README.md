@@ -12,11 +12,11 @@ Data Connector. It enables a REDCap user with a project API key to have data
 from their REDCap project downloaded to their Tableau Desktop instance directly
 using the REDCap API.
 
-For version 1.0 only a simple download of all project data in raw format is
-performed. 
+For version 1.0 only a simple download of all project data is performed, 
+although you can select to receive either raw or label data. 
 
 The module settings provide scope for institutions to specify their own text
-for the connector and instruction pages, although defaults are provided.
+for the connector and instruction pages (default text is provided).
 
 The module provides a Control Center link to an Instructions page. If the module
 is enabled for discovery by project users, then enabling within a project causes
@@ -43,16 +43,15 @@ into Tableau.
 ********************************************************************************
 ## TODO
 
-For version 1.0 only a simple download of all project data in raw format is
-performed. In subsequent versions the following additional capabilities are
-envisaged:
+For version 1.0 only a simple download of all project data performed. 
+The following additional capabilities are envisaged for future versions:
 
 1. Configurable REDCap API calls 
    Functionality similar to REDCap's API Playground that enables the user to 
    select different types of download, e.g. subset of fields, report, data 
-   dictionary, raw/labelled.
+   dictionary.
 
-2. Have the schema callback function perform a data dictionary download to 
-   configure field properties such as data type (e.g. number/date format)
+2. Have the getSchema function perform a data dictionary download to enable 
+   configuration of field properties such as data type and format.
    
 ********************************************************************************
