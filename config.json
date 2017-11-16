@@ -1,0 +1,104 @@
+{
+	"name": "Tableau Web Data Connector",
+
+	"namespace": "MCRI\\TableauConnector",
+
+	"authors": [
+		{
+			"name": "Luke Stevens",
+			"email": "luke.stevens@mcri.edu.au",
+			"institution": "Murdoch Children's Research Institute"
+		}
+	],
+
+	"permissions": [
+	],
+
+	"description": "Enable Tableau users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations.",
+
+	"links": {
+		"web-data-connector": [
+			{
+				"name": "Connector",
+				"icon": "n/a",
+				"url": "wdc.php"
+			}
+		],
+		"control-center": [
+			{
+				"name": "Tableau Connector Instructions",
+				"icon": "computer",
+				"url": "index.php"
+			}
+		],
+		"project": [
+			{
+				"name": "Tableau Connector Instructions",
+				"icon": "computer",
+				"url": "index.php"
+			}
+		]
+	},
+
+	"system-settings": [
+		{
+			"key": "instruction-panel-title",
+			"name": "Instruction Panel title",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "Instructions"
+		},
+		{
+			"key": "instruction-panel-text",
+			"name": "Instruction panel text",
+			"required": true,
+			"allow-project-overrides": true,
+			"type": "text",
+			"default": "<ol><li>In Tableau, search for \"Web Data Connector\" under Connect -> To a Server -> More</li><li>Enter the url displayed above as the \"web data connector URL\" in the dialog</li><li>Enter your project API token</li><li>Click Submit - your project data will be downloaded into Tableau</li></ol>"
+		},
+		{
+			"key": "connector-page-title",
+			"name": "Connector Page title",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Tableau Web Data Connector for REDCap"
+		},
+		{
+			"key": "connector-page-instruction-text",
+			"name": "Connector page instruction text",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Select the desired data format and enter your API token, then click \"Submit\"."
+		},
+		{
+			"key": "connector-page-format-label",
+			"name": "Connector page export format field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Raw data or labels?"
+		},
+		{
+			"key": "connector-page-token-label",
+			"name": "Connector page token input field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "API token"
+		},
+		{
+			"key": "tableau-wdc-js-src",
+			"name": "Tableau connector JavaScript library",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "https://connectors.tableau.com/libs/tableauwdc-2.0.8.min.js"
+		}
+	],
+
+	"project-settings": [
+        ]
+}
