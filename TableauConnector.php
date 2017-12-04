@@ -7,14 +7,14 @@
  *   https://github.com/tableau/webdataconnector/blob/master/docs/wdc_tutorial.md
  *   https://blog.clairvoyantsoft.com/setting-up-a-tableau-web-data-connector-62147e4bc4bf
  * TODO: 
- * - Include data dictionary (e.g. data type info) in myConnector.getSchema()
- *   (currently all fields treated as string
+ * - Do additional data dictionary API call in myConnector.getSchema() to get 
+ *   data type information for fields(currently all fields treated as string
+ * - Use rich text editor for instruction-panel-text setting
  * - Options for different export types: metadata, report, field/record filters
  */
 namespace MCRI\TableauConnector;
 
 use ExternalModules\AbstractExternalModule;
-use HtmlPage;
 
 /**
  * REDCap External Module: Tableau Connector
@@ -25,8 +25,9 @@ class TableauConnector extends AbstractExternalModule
          * Print the page of instructions 
          */
         public function printInstructionsPageContent() {
-                $panelTitle = $this->getSystemSetting('instruction-panel-title');
-                $instructionText = $this->getSystemSetting('instruction-panel-text');
+            $pid=PROJECT_ID;
+                $panelTitle = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-title') : $this->getSystemSetting('instruction-panel-title');
+                $instructionText = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-text') : $this->getSystemSetting('instruction-panel-text');
                 $url = $this->getUrl('wdc.php', false, true);
                 $url = str_replace('&pid='.PROJECT_ID, '', $url);
                 echo renderPageTitle($this->getModuleName());
@@ -115,16 +116,16 @@ class TableauConnector extends AbstractExternalModule
           recordsInfo.forEach(function(field){
             recordSchema.push({
               id: field.export_field_name,
-              alias: field.original_field_name,
+              alias: (field.export_field_name===field.original_field_name) ? field.original_field_name : field.original_field_name+' '+field.choice_value,
               dataType: tableau.dataTypeEnum.string
             });
+            var redcapTable = {
+              id: "redcap",
+              alias: "custom redcap extract",
+              columns: recordSchema
+            };
+            schemaCallback([redcapTable]);
           });
-          var redcapTable = {
-            id: "redcap",
-            alias: "custom redcap extract",
-            columns: recordSchema
-          }
-          schemaCallback([redcapTable]);
         }
       });
     };

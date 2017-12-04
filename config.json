@@ -55,7 +55,7 @@
 			"required": true,
 			"allow-project-overrides": true,
 			"type": "text",
-			"default": "<ol><li>In Tableau, search for \"Web Data Connector\" under Connect -> To a Server -> More</li><li>Enter the url displayed above as the \"web data connector URL\" in the dialog</li><li>Enter your project API token</li><li>Click Submit - your project data will be downloaded into Tableau</li></ol>"
+			"default": "<ol><li>In Tableau, search for \"Web Data Connector\" under Connect -> To a Server -> More</li><li>Enter the url displayed above as the \"web data connector URL\" in the dialog and press Enter</li><li>Enter your project API token</li><li>Click Submit - your project data will be downloaded into Tableau</li></ol>"
 		},
 		{
 			"key": "connector-page-title",
