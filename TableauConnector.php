@@ -8,7 +8,7 @@
  *   https://blog.clairvoyantsoft.com/setting-up-a-tableau-web-data-connector-62147e4bc4bf
  * TODO: 
  * - Do additional data dictionary API call in myConnector.getSchema() to get 
- *   data type information for fields(currently all fields treated as string
+ *   data type information for fields (currently all fields treated as string)
  * - Use rich text editor for instruction-panel-text setting
  * - Options for different export types: metadata, report, field/record filters
  */
@@ -25,7 +25,7 @@ class TableauConnector extends AbstractExternalModule
          * Print the page of instructions 
          */
         public function printInstructionsPageContent() {
-            $pid=PROJECT_ID;
+                $pid=PROJECT_ID;
                 $panelTitle = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-title') : $this->getSystemSetting('instruction-panel-title');
                 $instructionText = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-text') : $this->getSystemSetting('instruction-panel-text');
                 $url = $this->getUrl('wdc.php', false, true);

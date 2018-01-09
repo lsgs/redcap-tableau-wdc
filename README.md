@@ -1,8 +1,7 @@
 ********************************************************************************
 # Tableau Web Data Connector for REDCap
 
-Luke Stevens, Murdoch Childrens Research Institute https://www.mcri.edu.au
-
+Luke Stevens, Murdoch Children's Research Institute https://www.mcri.edu.au
 
 ********************************************************************************
 ## Summary
@@ -23,22 +22,23 @@ is enabled for discovery by project users, then enabling within a project causes
 a link to the Instructions page to be shown within the project page menu. 
 
 *The connector may be utilised by project API users irrespective of whether the 
-module is explicitly enabled for that project.*
+module is explicitly enabled for that project.* All that enabling the module in
+a project does is add a link to the instructions page in the project page menu.
 
 ********************************************************************************
 ## Instructions
 
-1. Enabling the module in your instance of REDCap.
+1. Enable the module in your instance of REDCap (and optionally in projects).
 2. Follow the Control Center (or project page) link to the Instructions page.
-3. Find and copy the URL displayed on the Instructions page.
-4. In Tableau, search for \"Web Data Connector\" under 
-   Connect -> To a Server -> More
+3. Copy the URL displayed prominently on the Instructions page.
+4. In Tableau, go to Connect -> To a Server -> More and find 
+   \"Web Data Connector\" 
 5. Paste the URL as the \"web data connector URL\".
 6. Enter your project API token into the text box.
 7. Click Submit
 
-The connector will be created and enable your project data to be downloaded 
-into Tableau.
+The connector will be created and your project data will be downloaded into 
+Tableau.
 
 ********************************************************************************
 ## TODO
@@ -52,6 +52,7 @@ The following additional capabilities are envisaged for future versions:
    dictionary.
 
 2. Have the getSchema function perform a data dictionary download to enable 
-   configuration of field properties such as data type and format.
+   configuration of field properties such as data type and format. Currently all
+   project fields are loaded into Tableau as string fields.
    
 ********************************************************************************

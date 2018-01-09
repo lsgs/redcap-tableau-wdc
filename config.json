@@ -14,7 +14,7 @@
 	"permissions": [
 	],
 
-	"description": "Enable Tableau users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations.",
+	"description": "Enable Tableau users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations. (Note: The connector can be utilised without enabling this module for a particular project. Enabling this module for a project just makes the Instructions page available in the project page menu.)",
 
 	"links": {
 		"web-data-connector": [
@@ -55,7 +55,7 @@
 			"required": true,
 			"allow-project-overrides": true,
 			"type": "text",
-			"default": "<ol><li>In Tableau, search for \"Web Data Connector\" under Connect -> To a Server -> More</li><li>Enter the url displayed above as the \"web data connector URL\" in the dialog and press Enter</li><li>Enter your project API token</li><li>Click Submit - your project data will be downloaded into Tableau</li></ol>"
+			"default": "<ol><li>In Tableau, go to Connect -> To a Server -> More and find \"Web Data Connector\" </li><li>Enter the url displayed above as the \"web data connector URL\" in the dialog and press Enter</li><li>Enter your project API token</li><li>Click \"Submit\", and your project data will be downloaded into Tableau</li></ol>"
 		},
 		{
 			"key": "connector-page-title",
