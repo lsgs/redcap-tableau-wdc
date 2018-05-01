@@ -103,7 +103,7 @@
 			"required": true,
 			"allow-project-overrides": false,
 			"type": "text",
-			"default": "Field name list (optional)"
+			"default": "Export field names (optional)"
 		},
 		{
 			"key": "connector-page-filterlogic-label",

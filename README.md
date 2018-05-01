@@ -6,53 +6,44 @@ Luke Stevens, Murdoch Children's Research Institute https://www.mcri.edu.au
 ********************************************************************************
 ## Summary
 
-A REDCap External Module that provides a link to use when creating a Tableau Web
+A REDCap External Module that provides a link to use to create a Tableau Web
 Data Connector. It enables a REDCap user with a project API key to have data 
-from their REDCap project downloaded to their Tableau Desktop instance directly
-using the REDCap API.
+from their REDCap project downloaded to their Tableau Desktop instance (v10.0+).
 
-For version 1.0 only a simple download of all project data is performed, 
-although you can select to receive either raw or label data. 
+Options available for customising the extract are:
+ * Raw data or labels
+ * Include Data Access Group no/yes
+ * Subset of fields: specify a comma- or space-separated list export field names
+ * Subset of records: specify a REDCap filter logic expression
 
 The module settings provide scope for institutions to specify their own text
 for the connector and instruction pages (default text is provided).
 
+### Enabling in Individual Projects is Optional
 The module provides a Control Center link to an Instructions page. If the module
 is enabled for discovery by project users, then enabling within a project causes
 a link to the Instructions page to be shown within the project page menu. 
 
-*The connector may be utilised by project API users irrespective of whether the 
-module is explicitly enabled for that project.* All that enabling the module in
+The connector may be utilised by project API users irrespective of whether the 
+module is explicitly enabled for that project. All that enabling the module in
 a project does is add a link to the instructions page in the project page menu.
 
 ********************************************************************************
 ## Instructions
 
-1. Enable the module in your instance of REDCap (and optionally in projects).
+1. Enable the module in your instance of REDCap (and optionally in a project).
 2. Follow the Control Center (or project page) link to the Instructions page.
 3. Copy the URL displayed prominently on the Instructions page.
-4. In Tableau, go to Connect -> To a Server -> More and find 
+4. In Tableau 10.0+, go to Connect -> To a Server -> More and find 
    \"Web Data Connector\" 
-5. Paste the URL as the \"web data connector URL\".
-6. Enter your project API token into the text box.
-7. Click Submit
+5. Paste the URL as the \"web data connector URL\" and press Enter.
+6. Enter your project API token into the text box and select/enter other 
+   options, as desired.
+7. Click Submit.
 
-The connector will be created and your project data will be downloaded into 
-Tableau.
+The web data connector will be executed and create a Tableau Data Source in your
+Tableau workbook .
 
-********************************************************************************
-## TODO
+8. Click "Update Now" to extract your project data into the Data Source.
 
-For version 1.0 only a simple download of all project data performed. 
-The following additional capabilities are envisaged for future versions:
-
-1. Configurable REDCap API calls 
-   Functionality similar to REDCap's API Playground that enables the user to 
-   select different types of download, e.g. subset of fields, report, data 
-   dictionary.
-
-2. Have the getSchema function perform a data dictionary download to enable 
-   configuration of field properties such as data type and format. Currently all
-   project fields are loaded into Tableau as string fields.
-   
 ********************************************************************************

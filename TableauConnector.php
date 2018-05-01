@@ -7,10 +7,9 @@
  *   https://github.com/tableau/webdataconnector/blob/master/docs/wdc_tutorial.md
  *   https://blog.clairvoyantsoft.com/setting-up-a-tableau-web-data-connector-62147e4bc4bf
  * TODO: 
- * - Do additional data dictionary API call in myConnector.getSchema() to get 
- *   data type information for fields (currently all fields treated as string)
- * - Use rich text editor for instruction-panel-text setting
  * - Options for different export types: metadata, report, field/record filters
+ *   (may require additional content in Project ODM XML e.g. report list, indication
+ *   of which instruments are surveys.
  */
 namespace MCRI\TableauConnector;
 
@@ -21,6 +20,11 @@ use ExternalModules\AbstractExternalModule;
  */
 class TableauConnector extends AbstractExternalModule
 {        
+        public function redcap_module_link_check_display()
+        {
+                return true;
+        }
+
         /**
          * Print the page of instructions 
          */
@@ -85,6 +89,10 @@ class TableauConnector extends AbstractExternalModule
     <div class="form-group">
       <input type="hidden" id="url" value="<?php echo APP_PATH_WEBROOT_FULL.'api/';?>">
       <div class="input-group">
+        <span class="input-group-addon" style=""><?php echo $tokenLabelText;?></span>
+        <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
+      </div>
+      <div class="input-group">
         <span class="input-group-addon" style=""><?php echo $formatLabelText;?></span>
         <span class="form-control text-left">
           <label class="radio-inline"><input type="radio" name="raworlabel" value="raw" checked>raw</label>
@@ -97,10 +105,6 @@ class TableauConnector extends AbstractExternalModule
           <label class="radio-inline"><input type="radio" name="incldag" value="0" checked>no</label>
           <label class="radio-inline"><input type="radio" name="incldag" value="1">yes</label>
         </span>
-      </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $tokenLabelText;?></span>
-        <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
       </div>
       <div class="input-group">
         <span class="input-group-addon" style=""><?php echo $fieldListLabelText;?></span>
@@ -144,14 +148,22 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             dataType: "xml",
             success: function(response){
                 var $response = $(response);
-                var pName = $response.find( 'StudyName' ).text();
-                var isLong = $response.find( 'StudyEventRef' ).length > 0;
-                var numRptEvents = $response.find( 'redcap\\:RepeatingEvent' ).length;
-                var numRptForms = $response.find( 'redcap\\:RepeatingInstrument' ).length;
+                var pName = $response.find('GlobalVariables').find( 'StudyName' ).text();
+                var isLong = $response.find('MetaDataVersion').find( 'StudyEventRef' ).length > 0;
+                
+//                var numRptEvents = $response.find( 'redcap\\:RepeatingEvent' ).length; // this find works in the simulator but for some unknown reason not in Tableau - instead find repeat setup by looping through GlobalVariables children
+//                var numRptForms = $response.find( 'redcap\\:RepeatingInstrument' ).length;
+                var hasRepeatingEventsOrForms = false;
+                $response.find('GlobalVariables').children().each(function(){
+                    if (this.nodeName==='redcap:RepeatingInstrumentsAndEvents') {
+                        hasRepeatingEventsOrForms = true;
+                    }
+                });
+                
                 var filterFields = connectionData.fieldList.length>0;
                 
                 var fields = [];
-                $response.find( 'ItemRef' ).each(function(v){
+                $response.find('MetaDataVersion').find( 'ItemRef' ).each(function(v){
                     var rcExportVarname = this.attributes['ItemOID'].value;
                     var varNode = $response.find( 'ItemDef[OID="'+rcExportVarname+'"]');
                     var rcFType = varNode.attr('redcap:FieldType');
@@ -159,7 +171,15 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                     if (rcFType !== 'descriptive') {
                         if (fields.length>0 && filterFields && 
                                 $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
-                            return; // if field list specified, skip if current field is not listed
+                            if (rcFType==='checkbox') { 
+                                // if the user has specified the checkbox variable name rather than full export names (with ___) then still allow
+                                var cbNameParts = rcExportVarname.split('___');
+                                if (!connectionData.fieldList.includes(cbNameParts[0])) {
+                                    return;
+                                }
+                            } else {
+                                return; // if field list specified, skip if current field is not listed
+                            }
                         } 
                         
                         var f = {};
@@ -171,7 +191,9 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
                         if (rcFType==='checkbox') {
                             f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
-                            if (tableau.connectionData.raworlabel==='label') { dataType = 'string'; } // will get "Checked"/"Unchecked"
+                            if (tableau.connectionData.raworlabel==='label') { 
+                                dataType = 'string'; // will get "Checked"/"Unchecked"
+                            }
                         }
                         
                         f.dataType = odmTypeToTableauType(dataType);
@@ -190,7 +212,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                                     dataType: tableau.dataTypeEnum.string
                                 });
                             }
-                            if (numRptEvents+numRptForms>0) {
+                            if (hasRepeatingEventsOrForms) {//numRptEvents+numRptForms>0) {
                                 fields.push({
                                     id: "redcap_repeat_instrument",
                                     alias: "redcap_repeat_instrument",
@@ -231,7 +253,24 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
     // Download the data
     myConnector.getData = function(table, doneCallback) {
-        var connectionData = JSON.parse(tableau.connectionData);//queryStringToObject(tableau.connectionData);
+        var connectionData = JSON.parse(tableau.connectionData);
+        
+        // if subset of fields is specified, look for any checkbox columns 
+        // and swap out for the checkbox field name
+        var fieldList = [];
+        if (connectionData.fieldList.length>0) {
+            connectionData.fieldList.forEach(function(f) {
+                if (f.indexOf('___')>0) {
+                    var cbNameParts = f.split('___');
+                    if (!fieldList.includes(cbNameParts[0])) {
+                        fieldList.push(cbNameParts[0]);
+                    }
+                } else {
+                    fieldList.push(f);
+                }
+            });
+        }
+        
         var tableData = [];
         $.ajax({
             url: connectionData.url,
@@ -242,10 +281,10 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                 format: 'json',
                 returnFormat: 'json',
                 type: 'flat',
-                fields: connectionData.fieldList,
+                fields: fieldList,
                 rawOrLabel: connectionData.raworlabel,
                 rawOrLabelHeaders: 'raw',
-                exportCheckboxLabel: 'true',
+                exportCheckboxLabel: false,
                 exportSurveyFields: connectionData.surveyfields,
                 exportDataAccessGroups: connectionData.dags,
                 filterLogic: connectionData.filterLogic
@@ -277,12 +316,11 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
     };
     
     function getCheckboxChoiceLabel($response, rcExportVarname) {
-        var choiceLabel = '';
         var choiceOptionString = $response.find( 'CodeList[OID="'+rcExportVarname+'.choices"]' ).attr('redcap:CheckboxChoices');
-
         var choiceVarVal = rcExportVarname.split('___');
+        var choiceLabel = choiceVarVal;
         choiceOptionString.split(' | ').forEach(function(c) {
-            if (c.startsWith(choiceVarVal[1]+', ')) { 
+            if (c.lastIndexOf(choiceVarVal[1]+', ', 0)===0) { // if (c.startsWith(choiceVarVal[1]+', ')) { // do not use startsWith() !
                 choiceLabel = c.replace(choiceVarVal[1]+', ', ''); 
             }
         });
@@ -299,16 +337,11 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
             var fields = $("input#fieldList").val();
             var fieldList = (fields.trim().length>0) ? fields.split(/[ ,]+/) : [];
-/* This works in the simulator but not in Tableau. Debugging shows
- * tableau.connectionData = "[object Object]" i.e. that string, not the object!
+/* Passing tableau.connectionData as an object works in the simulator but not in Tableau. 
+ * Debugging shows tableau.connectionData = "[object Object]" i.e. that string, not the object!
  * (https://tableau.github.io/webdataconnector/docs/wdc_debugging)
-            tableau.connectionData = {
-                raworlabel: exportFormat,
-                surveyfields: false, // can't yet tell from odm xml whiat instruments are surveys
-                dags: includeDag,
-                token: $("input#token").val(),
-                url: $("input#url").val()
-            };
+ * Passing tableau.connectionData as a string is a workaround, hence:
+ * tableau.connectionData = JSON.stringify(connectionData);
  */
             var connectionData = {
                 raworlabel: exportFormat,
