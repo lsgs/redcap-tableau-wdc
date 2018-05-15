@@ -14,7 +14,7 @@
 	"permissions": [
 	],
 
-	"description": "Enable Tableau users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations. (Note: The connector can be utilised without enabling this module for a particular project. Enabling this module for a project just makes the Instructions page available in the project page menu.)",
+	"description": "Enable Tableau (v10.0+) users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations. (Note: The connector can be utilised without enabling this module for a particular project. Enabling this module for a project just makes the Instructions page available in the project page menu.)",
 
 	"links": {
 		"web-data-connector": [
@@ -82,12 +82,36 @@
 			"default": "Raw data or labels?"
 		},
 		{
+			"key": "connector-page-dag-label",
+			"name": "Connector page include DAG field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Include Data Access Group?"
+		},
+		{
 			"key": "connector-page-token-label",
 			"name": "Connector page token input field label",
 			"required": true,
 			"allow-project-overrides": false,
 			"type": "text",
 			"default": "API token"
+		},
+		{
+			"key": "connector-page-fieldlist-label",
+			"name": "Connector page field list input field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Export field names (optional)"
+		},
+		{
+			"key": "connector-page-filterlogic-label",
+			"name": "Connector page filter logic input field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Record filter (optional)"
 		},
 		{
 			"key": "tableau-wdc-js-src",

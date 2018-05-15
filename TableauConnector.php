@@ -7,10 +7,9 @@
  *   https://github.com/tableau/webdataconnector/blob/master/docs/wdc_tutorial.md
  *   https://blog.clairvoyantsoft.com/setting-up-a-tableau-web-data-connector-62147e4bc4bf
  * TODO: 
- * - Do additional data dictionary API call in myConnector.getSchema() to get 
- *   data type information for fields (currently all fields treated as string)
- * - Use rich text editor for instruction-panel-text setting
  * - Options for different export types: metadata, report, field/record filters
+ *   (may require additional content in Project ODM XML e.g. report list, indication
+ *   of which instruments are surveys.
  */
 namespace MCRI\TableauConnector;
 
@@ -46,6 +45,17 @@ class TableauConnector extends AbstractExternalModule
                 <?php
         }
 
+        public function getSystemSettingOrDefault($key) {
+                $value = $this->getSystemSetting($key);
+                if (is_null($value)) {
+                        $config = $this->getSettingConfig($key);
+                        if (array_key_exists('default', $config)) {
+                                $value = $config['default'];
+                        } 
+                }
+                return $value;
+        }
+
         /**
          * Print the module plugin page html content 
          */
@@ -54,15 +64,18 @@ class TableauConnector extends AbstractExternalModule
                 
                 $logoImg = (trim($login_logo)=="") ? "" : "<img src=\"$login_logo\" title=\"$institution\" alt=\"$institution\" style='max-width:850px;'>";
                 $institution = js_escape2(strip_tags(label_decode($institution)));
-                $pageTitle = $this->getSystemSetting('connector-page-title');
-                $instructionText = $this->getSystemSetting('connector-page-instruction-text');
-                $formatLabelText = $this->getSystemSetting('connector-page-format-label');
-                $tokenLabelText = $this->getSystemSetting('connector-page-token-label');
-                $librarySrc = $this->getSystemSetting('tableau-wdc-js-src');
+                $pageTitle = $this->getSystemSettingOrDefault('connector-page-title');
+                $instructionText = $this->getSystemSettingOrDefault('connector-page-instruction-text');
+                $formatLabelText = $this->getSystemSettingOrDefault('connector-page-format-label');
+                $dagLabelText = $this->getSystemSettingOrDefault('connector-page-dag-label');
+                $tokenLabelText = $this->getSystemSettingOrDefault('connector-page-token-label');
+                $fieldListLabelText = $this->getSystemSettingOrDefault('connector-page-fieldlist-label');
+                $filterLogicLabelText = $this->getSystemSettingOrDefault('connector-page-filterlogic-label');
+                $librarySrc = $this->getSystemSettingOrDefault('tableau-wdc-js-src');
 ?>
 <style type="text/css">
     .input-group { margin:20px 0; }
-    .input-group-addon { min-width:150px; text-align:left; }
+    .input-group-addon { min-width:220px; text-align:left; }
 </style>
 <div class="row">
   <div class="col-sm-12 text-center">
@@ -71,10 +84,14 @@ class TableauConnector extends AbstractExternalModule
   </div>
 </div>
 <div class="row">
-  <div class="col-sm-8 col-sm-offset-2">
+  <div class="col-sm-10 col-sm-offset-1">
     <p class="text-center"><?php echo $instructionText;?></p>
     <div class="form-group">
       <input type="hidden" id="url" value="<?php echo APP_PATH_WEBROOT_FULL.'api/';?>">
+      <div class="input-group">
+        <span class="input-group-addon" style=""><?php echo $tokenLabelText;?></span>
+        <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
+      </div>
       <div class="input-group">
         <span class="input-group-addon" style=""><?php echo $formatLabelText;?></span>
         <span class="form-control text-left">
@@ -83,8 +100,19 @@ class TableauConnector extends AbstractExternalModule
         </span>
       </div>
       <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $tokenLabelText;?></span>
-        <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
+        <span class="input-group-addon" style=""><?php echo $dagLabelText;?></span>
+        <span class="form-control text-left">
+          <label class="radio-inline"><input type="radio" name="incldag" value="0" checked>no</label>
+          <label class="radio-inline"><input type="radio" name="incldag" value="1">yes</label>
+        </span>
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon" style=""><?php echo $fieldListLabelText;?></span>
+        <input type="text" class="form-control" id="fieldList" placeholder="[Optional] comma- or space-separated list of export field names">
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon" style=""><?php echo $filterLogicLabelText;?></span>
+        <input type="text" class="form-control" id="filterLogic" placeholder="[Optional] REDCap-style filter logic expression">
       </div>
       <div class="text-center">
         <button class="btn btn-primary" id="submitButton" type="button">Submit</button>
@@ -94,99 +122,257 @@ class TableauConnector extends AbstractExternalModule
 </div>
 
 <script src="<?php echo $librarySrc;?>" type="text/javascript"></script>
-<script>
-
+<script type="text/javascript">
+if (typeof tableau==='undefined') { alert('Error: could not download tableau connector code at <?php echo $librarySrc;?>'); }
 (function(tableau) {
 
     var myConnector = tableau.makeConnector();
 
     // Define the schema
     myConnector.getSchema = function(schemaCallback) {
-      var connectionParams = JSON.parse(tableau.connectionData);
-      var recordsInfo = [];
-      $.ajax({
-        url: connectionParams.url,
-        type: "POST",
-        data: {
-          token: connectionParams.token,
-          content: 'exportFieldNames',
-          format: 'json',
-          returnFormat: 'json'
-        },
-        contentType: "application/x-www-form-urlencoded",
-        dataType: "json",
-        success: function(resp){
-          recordsInfo = resp;
-          var recordSchema = [];
-          recordsInfo.forEach(function(field){
-            recordSchema.push({
-              id: field.export_field_name,
-              alias: (field.export_field_name===field.original_field_name) ? field.original_field_name : field.original_field_name+' '+field.choice_value,
-              dataType: tableau.dataTypeEnum.string
-            });
-            var redcapTable = {
-              id: "redcap",
-              alias: "custom redcap extract",
-              columns: recordSchema
-            };
-            schemaCallback([redcapTable]);
-          });
-        }
-      });
+        var connectionData = JSON.parse(tableau.connectionData);
+        
+        $.ajax({
+            url: connectionData.url,
+            type: "POST",
+            data: {
+                token: connectionData.token,
+                content: 'project_xml',
+                returnFormat: 'json',
+                returnMetadataOnly: true,
+                exportSurveyFields: connectionData.surveyFields,
+                exportDataAccessGroups: connectionData.dags,
+                exportFiles: false
+            },
+            contentType: "application/x-www-form-urlencoded",
+            dataType: "xml",
+            success: function(response) {
+                try {
+                    var redcapTable = buildDataSource(connectionData, response);
+                    schemaCallback([redcapTable]);
+                }
+                catch (e) {
+                    console.log(e);
+                }
+            }
+        });
     };
 
     // Download the data
     myConnector.getData = function(table, doneCallback) {
-      var connectionParams = JSON.parse(tableau.connectionData);
-      var tableData = [];
-      $.ajax({
-          url: connectionParams.url,
-          type: "POST",
-          data: {
-            token: connectionParams.token,
-            content: 'record',
-            format: 'json',
-            returnFormat: 'json',
-            type: 'flat',
-            rawOrLabel: connectionParams.raworlabel,
-            rawOrLabelHeaders: 'raw',
-            exportCheckboxLabel: 'true',
-            exportSurveyFields: 'true',
-            exportDataAccessGroups: 'true'
-          },
-          contentType: "application/x-www-form-urlencoded",
-          dataType: "json",
-          success: function(resp){
-          resp.forEach(function(record){
-            tableData.push(record);
-          });
-          table.appendRows(tableData);
-          doneCallback();
+        var connectionData = JSON.parse(tableau.connectionData);
+        
+        // if subset of fields is specified, look for any checkbox columns 
+        // and swap out for the checkbox field name
+        var fieldList = [];
+        if (connectionData.fieldList.length>0) {
+            connectionData.fieldList.forEach(function(f) {
+                if (f.indexOf('___')>0) {
+                    var cbNameParts = f.split('___');
+                    if ($.inArray(cbNameParts[0], fieldList)===-1) {
+                        fieldList.push(cbNameParts[0]);
+                    }
+                } else {
+                    fieldList.push(f);
+                }
+            });
         }
-      });
+        
+        var tableData = [];
+        $.ajax({
+            url: connectionData.url,
+            type: "POST",
+            data: {
+                token: connectionData.token,
+                content: 'record',
+                format: 'json',
+                returnFormat: 'json',
+                type: 'flat',
+                fields: fieldList,
+                rawOrLabel: connectionData.raworlabel,
+                rawOrLabelHeaders: 'raw',
+                exportCheckboxLabel: false,
+                exportSurveyFields: connectionData.surveyfields,
+                exportDataAccessGroups: connectionData.dags,
+                filterLogic: connectionData.filterLogic
+            },
+            contentType: "application/x-www-form-urlencoded",
+            dataType: "json",
+            success: function(resp){
+                resp.forEach(function(record){
+                    tableData.push(record);
+                });
+                table.appendRows(tableData);
+                doneCallback();
+            }
+        });
     };
 
     tableau.registerConnector(myConnector);
 
-    $(document).ready(function (){
-      $("#submitButton").click(function() {
-        var exportFormat = $("input[name=\"raworlabel\"]:checked").val();
-        exportFormat = (exportFormat==='label') ? exportFormat : 'raw';
-        tableau.connectionData = JSON.stringify({
-          raworlabel: exportFormat,
-          token: $("input#token").val(),
-          url: $("input#url").val()
+    function buildDataSource(connectionData, response){
+        var $response = $(response);
+        var pName = $response.find('GlobalVariables').find( 'StudyName' ).text();
+        var isLong = $response.find('MetaDataVersion').find( 'StudyEventRef' ).length > 0;
+
+    //                var numRptEvents = $response.find( 'redcap\\:RepeatingEvent' ).length; // this find works in the simulator but for some unknown reason not in Tableau - instead find repeat setup by looping through GlobalVariables children
+    //                var numRptForms = $response.find( 'redcap\\:RepeatingInstrument' ).length;
+        var hasRepeatingEventsOrForms = false;
+        $response.find('GlobalVariables').children().each(function(){
+            if (this.nodeName==='redcap:RepeatingInstrumentsAndEvents') {
+                hasRepeatingEventsOrForms = true;
+            }
         });
-        tableau.connectionName = "REDCap Data";
-        try {
-          tableau.submit();
+
+        var filterFields = connectionData.fieldList.length>0;
+
+        var fields = [];
+        $response.find('MetaDataVersion').find( 'ItemRef' ).each(function(v){
+            var rcExportVarname = this.attributes['ItemOID'].value;
+            var varNode = $response.find( 'ItemDef[OID="'+rcExportVarname+'"]');
+            var rcFType = varNode.attr('redcap:FieldType');
+
+            if (rcFType !== 'descriptive') {
+                if (fields.length>0 && filterFields && 
+                        $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
+                    if (rcFType==='checkbox') { 
+                        // if the user has specified the checkbox variable name rather than full export names (with ___) then still allow
+                        var cbNameParts = rcExportVarname.split('___');
+                        if ($.inArray(cbNameParts[0], connectionData.fieldList)===-1) {
+                            return;
+                        }
+                    } else {
+                        return; // if field list specified, skip if current field is not listed
+                    }
+                } 
+
+                var f = {};
+                f.id = rcExportVarname;
+                f.alias = rcExportVarname;
+                f.description = varNode.find( 'TranslatedText' ).text();
+
+                var dataType = varNode.attr('DataType');
+
+                if (rcFType==='checkbox') {
+                    f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
+                    if (connectionData.raworlabel==='label') { 
+                        dataType = 'string'; // will get "Checked"/"Unchecked"
+                    }
+                }
+
+                f.dataType = odmTypeToTableauType(dataType);
+
+                fields.push(f);
+
+                if (fields.length === 1){ // i.e. directly after record id field...
+                    if (filterFields && $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
+                        connectionData.fieldList.unshift(rcExportVarname); // ensure record id is included in list of fields, when specified
+                    }
+                    if (isLong) {
+                        fields.push({
+                            id: "redcap_event_name",
+                            alias: "redcap_event_name",
+                            description: "Event Name",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                    }
+                    if (hasRepeatingEventsOrForms) {//numRptEvents+numRptForms>0) {
+                        fields.push({
+                            id: "redcap_repeat_instrument",
+                            alias: "redcap_repeat_instrument",
+                            description: "Repeat Instrument",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                        fields.push({
+                            id: "redcap_repeat_instance",
+                            alias: "redcap_repeat_instance",
+                            description: "Repeat Instance",
+                            dataType: tableau.dataTypeEnum.int
+                        });
+                    }
+                    if (connectionData.dags) {
+                        fields.push({
+                            id: "redcap_data_access_group",
+                            alias: "redcap_data_access_group",
+                            description: "Data Access Group",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                    }
+                }
+            }
+        });
+
+        var redcapTable = {
+            id: "redcap",
+            alias: pName,
+            columns: fields
+        };
+
+        tableau.connectionData = JSON.stringify(connectionData);
+
+        return redcapTable;
+    };
+
+    function odmTypeToTableauType(dtype) {
+        switch (dtype) {
+            case 'integer': return tableau.dataTypeEnum.int; break;
+            case 'text': return tableau.dataTypeEnum.string; break;
+            case 'float': return tableau.dataTypeEnum.float; break;
+            case 'date': return tableau.dataTypeEnum.date; break;
+            case 'datetime': return tableau.dataTypeEnum.datetime; break;
+            case 'boolean': return tableau.dataTypeEnum.bool; break;
+            default: return tableau.dataTypeEnum.string;
         }
-        catch(err) {
-          alert(err);
-        }
-      });
+    };
+    
+    function getCheckboxChoiceLabel($response, rcExportVarname) {
+        var choiceOptionString = $response.find( 'CodeList[OID="'+rcExportVarname+'.choices"]' ).attr('redcap:CheckboxChoices');
+        var choiceVarVal = rcExportVarname.split('___');
+        var choiceLabel = choiceVarVal;
+        choiceOptionString.split(' | ').forEach(function(c) {
+            if (c.lastIndexOf(choiceVarVal[1]+', ', 0)===0) { // if (c.startsWith(choiceVarVal[1]+', ')) { // do not use startsWith() !
+                choiceLabel = c.replace(choiceVarVal[1]+', ', ''); 
+            }
+        });
+        return choiceLabel;
+    }
+    
+    $(document).ready(function (){
+        
+        $("#submitButton").click(function() {
+            var exportFormat = $("input[name=\"raworlabel\"]:checked").val();
+            exportFormat = (exportFormat==='label') ? exportFormat : 'raw';
+            
+            var includeDag = ("1" == $("input[name=\"incldag\"]:checked").val());
+
+            var fields = $("input#fieldList").val();
+            var fieldList = (fields.trim().length>0) ? fields.split(/[ ,\t]+/) : [];
+/* Passing tableau.connectionData as an object works in the simulator but not in Tableau. 
+ * Debugging shows tableau.connectionData = "[object Object]" i.e. that string, not the object!
+ * (https://tableau.github.io/webdataconnector/docs/wdc_debugging)
+ * Passing tableau.connectionData as a string is a workaround, hence:
+ * tableau.connectionData = JSON.stringify(connectionData);
+ */
+            var connectionData = {
+                raworlabel: exportFormat,
+                surveyfields: false, // can't yet tell from odm xml whiat instruments are surveys
+                dags: includeDag,
+                token: $("input#token").val(),
+                fieldList: fieldList,
+                filterLogic: $("input#filterLogic").val(),
+                url: $("input#url").val()
+            };
+            tableau.connectionData = JSON.stringify(connectionData);
+            tableau.connectionName = "REDCap Data";
+            try {
+                tableau.submit();
+            }
+            catch(err) {
+                console.log(err);
+            }
+        });
     });
-  })(tableau);
+})(tableau);
 </script>
 <?php
         }
