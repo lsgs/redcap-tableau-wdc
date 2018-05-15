@@ -146,107 +146,14 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             },
             contentType: "application/x-www-form-urlencoded",
             dataType: "xml",
-            success: function(response){
-                var $response = $(response);
-                var pName = $response.find('GlobalVariables').find( 'StudyName' ).text();
-                var isLong = $response.find('MetaDataVersion').find( 'StudyEventRef' ).length > 0;
-                
-//                var numRptEvents = $response.find( 'redcap\\:RepeatingEvent' ).length; // this find works in the simulator but for some unknown reason not in Tableau - instead find repeat setup by looping through GlobalVariables children
-//                var numRptForms = $response.find( 'redcap\\:RepeatingInstrument' ).length;
-                var hasRepeatingEventsOrForms = false;
-                $response.find('GlobalVariables').children().each(function(){
-                    if (this.nodeName==='redcap:RepeatingInstrumentsAndEvents') {
-                        hasRepeatingEventsOrForms = true;
-                    }
-                });
-                
-                var filterFields = connectionData.fieldList.length>0;
-                
-                var fields = [];
-                $response.find('MetaDataVersion').find( 'ItemRef' ).each(function(v){
-                    var rcExportVarname = this.attributes['ItemOID'].value;
-                    var varNode = $response.find( 'ItemDef[OID="'+rcExportVarname+'"]');
-                    var rcFType = varNode.attr('redcap:FieldType');
-                    
-                    if (rcFType !== 'descriptive') {
-                        if (fields.length>0 && filterFields && 
-                                $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
-                            if (rcFType==='checkbox') { 
-                                // if the user has specified the checkbox variable name rather than full export names (with ___) then still allow
-                                var cbNameParts = rcExportVarname.split('___');
-                                if (!connectionData.fieldList.includes(cbNameParts[0])) {
-                                    return;
-                                }
-                            } else {
-                                return; // if field list specified, skip if current field is not listed
-                            }
-                        } 
-                        
-                        var f = {};
-                        f.id = rcExportVarname;
-                        f.alias = rcExportVarname;
-                        f.description = varNode.find( 'TranslatedText' ).text();
-
-                        var dataType = varNode.attr('DataType');
-
-                        if (rcFType==='checkbox') {
-                            f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
-                            if (tableau.connectionData.raworlabel==='label') { 
-                                dataType = 'string'; // will get "Checked"/"Unchecked"
-                            }
-                        }
-                        
-                        f.dataType = odmTypeToTableauType(dataType);
-                        
-                        fields.push(f);
-
-                        if (fields.length === 1){ // i.e. directly after record id field...
-                            if (filterFields && $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
-                                connectionData.fieldList.unshift(rcExportVarname); // ensure record id is included in list of fields, when specified
-                            }
-                            if (isLong) {
-                                fields.push({
-                                    id: "redcap_event_name",
-                                    alias: "redcap_event_name",
-                                    description: "Event Name",
-                                    dataType: tableau.dataTypeEnum.string
-                                });
-                            }
-                            if (hasRepeatingEventsOrForms) {//numRptEvents+numRptForms>0) {
-                                fields.push({
-                                    id: "redcap_repeat_instrument",
-                                    alias: "redcap_repeat_instrument",
-                                    description: "Repeat Instrument",
-                                    dataType: tableau.dataTypeEnum.string
-                                });
-                                fields.push({
-                                    id: "redcap_repeat_instance",
-                                    alias: "redcap_repeat_instance",
-                                    description: "Repeat Instance",
-                                    dataType: tableau.dataTypeEnum.int
-                                });
-                            }
-                            if (connectionData.dags) {
-                                fields.push({
-                                    id: "redcap_data_access_group",
-                                    alias: "redcap_data_access_group",
-                                    description: "Data Access Group",
-                                    dataType: tableau.dataTypeEnum.string
-                                });
-                            }
-                        }
-                    }
-                });
-
-                var redcapTable = {
-                    id: "redcap",
-                    alias: pName,
-                    columns: fields
-                };
-                
-                tableau.connectionData = JSON.stringify(connectionData);
-
-                schemaCallback([redcapTable]);
+            success: function(response) {
+                try {
+                    var redcapTable = buildDataSource(connectionData, response);
+                    schemaCallback([redcapTable]);
+                }
+                catch (e) {
+                    console.log(e);
+                }
             }
         });
     };
@@ -262,7 +169,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             connectionData.fieldList.forEach(function(f) {
                 if (f.indexOf('___')>0) {
                     var cbNameParts = f.split('___');
-                    if (!fieldList.includes(cbNameParts[0])) {
+                    if ($.inArray(cbNameParts[0], fieldList)===-1) {
                         fieldList.push(cbNameParts[0]);
                     }
                 } else {
@@ -303,6 +210,109 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
     tableau.registerConnector(myConnector);
 
+    function buildDataSource(connectionData, response){
+        var $response = $(response);
+        var pName = $response.find('GlobalVariables').find( 'StudyName' ).text();
+        var isLong = $response.find('MetaDataVersion').find( 'StudyEventRef' ).length > 0;
+
+    //                var numRptEvents = $response.find( 'redcap\\:RepeatingEvent' ).length; // this find works in the simulator but for some unknown reason not in Tableau - instead find repeat setup by looping through GlobalVariables children
+    //                var numRptForms = $response.find( 'redcap\\:RepeatingInstrument' ).length;
+        var hasRepeatingEventsOrForms = false;
+        $response.find('GlobalVariables').children().each(function(){
+            if (this.nodeName==='redcap:RepeatingInstrumentsAndEvents') {
+                hasRepeatingEventsOrForms = true;
+            }
+        });
+
+        var filterFields = connectionData.fieldList.length>0;
+
+        var fields = [];
+        $response.find('MetaDataVersion').find( 'ItemRef' ).each(function(v){
+            var rcExportVarname = this.attributes['ItemOID'].value;
+            var varNode = $response.find( 'ItemDef[OID="'+rcExportVarname+'"]');
+            var rcFType = varNode.attr('redcap:FieldType');
+
+            if (rcFType !== 'descriptive') {
+                if (fields.length>0 && filterFields && 
+                        $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
+                    if (rcFType==='checkbox') { 
+                        // if the user has specified the checkbox variable name rather than full export names (with ___) then still allow
+                        var cbNameParts = rcExportVarname.split('___');
+                        if ($.inArray(cbNameParts[0], connectionData.fieldList)===-1) {
+                            return;
+                        }
+                    } else {
+                        return; // if field list specified, skip if current field is not listed
+                    }
+                } 
+
+                var f = {};
+                f.id = rcExportVarname;
+                f.alias = rcExportVarname;
+                f.description = varNode.find( 'TranslatedText' ).text();
+
+                var dataType = varNode.attr('DataType');
+
+                if (rcFType==='checkbox') {
+                    f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
+                    if (connectionData.raworlabel==='label') { 
+                        dataType = 'string'; // will get "Checked"/"Unchecked"
+                    }
+                }
+
+                f.dataType = odmTypeToTableauType(dataType);
+
+                fields.push(f);
+
+                if (fields.length === 1){ // i.e. directly after record id field...
+                    if (filterFields && $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
+                        connectionData.fieldList.unshift(rcExportVarname); // ensure record id is included in list of fields, when specified
+                    }
+                    if (isLong) {
+                        fields.push({
+                            id: "redcap_event_name",
+                            alias: "redcap_event_name",
+                            description: "Event Name",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                    }
+                    if (hasRepeatingEventsOrForms) {//numRptEvents+numRptForms>0) {
+                        fields.push({
+                            id: "redcap_repeat_instrument",
+                            alias: "redcap_repeat_instrument",
+                            description: "Repeat Instrument",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                        fields.push({
+                            id: "redcap_repeat_instance",
+                            alias: "redcap_repeat_instance",
+                            description: "Repeat Instance",
+                            dataType: tableau.dataTypeEnum.int
+                        });
+                    }
+                    if (connectionData.dags) {
+                        fields.push({
+                            id: "redcap_data_access_group",
+                            alias: "redcap_data_access_group",
+                            description: "Data Access Group",
+                            dataType: tableau.dataTypeEnum.string
+                        });
+                    }
+                }
+            }
+        });
+
+        var redcapTable = {
+            id: "redcap",
+            alias: pName,
+            columns: fields
+        };
+
+        tableau.connectionData = JSON.stringify(connectionData);
+
+        return redcapTable;
+    };
+
     function odmTypeToTableauType(dtype) {
         switch (dtype) {
             case 'integer': return tableau.dataTypeEnum.int; break;
@@ -336,7 +346,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             var includeDag = ("1" == $("input[name=\"incldag\"]:checked").val());
 
             var fields = $("input#fieldList").val();
-            var fieldList = (fields.trim().length>0) ? fields.split(/[ ,]+/) : [];
+            var fieldList = (fields.trim().length>0) ? fields.split(/[ ,\t]+/) : [];
 /* Passing tableau.connectionData as an object works in the simulator but not in Tableau. 
  * Debugging shows tableau.connectionData = "[object Object]" i.e. that string, not the object!
  * (https://tableau.github.io/webdataconnector/docs/wdc_debugging)
