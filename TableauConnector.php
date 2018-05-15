@@ -19,7 +19,7 @@ use ExternalModules\AbstractExternalModule;
  * REDCap External Module: Tableau Connector
  */
 class TableauConnector extends AbstractExternalModule
-{        
+{
         public function redcap_module_link_check_display()
         {
                 return true;
