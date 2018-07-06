@@ -32,7 +32,7 @@ class TableauConnector extends AbstractExternalModule
                 $pid=PROJECT_ID;
                 $panelTitle = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-title') : $this->getSystemSetting('instruction-panel-title');
                 $instructionText = (defined('PROJECT_ID')) ?  $this->getProjectSetting('instruction-panel-text') : $this->getSystemSetting('instruction-panel-text');
-                $url = $this->getUrl('wdc.php', false, true);
+                $url = $this->getUrl('wdc.php', true, true);
                 $url = str_replace('&pid='.PROJECT_ID, '', $url);
                 echo renderPageTitle($this->getModuleName());
                 echo "<div class='panel panel-primary' style='margin: 2em 0;'><div class='panel-heading'>$url</div></div>";
@@ -251,17 +251,18 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                 f.alias = rcExportVarname;
                 f.description = varNode.find( 'TranslatedText' ).text();
 
-                var dataType = varNode.attr('DataType');
+                var dataType = 'string';
+
+                if (connectionData.raworlabel==='raw') { 
+                    dataType = varNode.attr('DataType');
+                }
 
                 if (rcFType==='checkbox') {
                     f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
-                    if (connectionData.raworlabel==='label') { 
-                        dataType = 'string'; // will get "Checked"/"Unchecked"
-                    }
                 }
-
+                
                 f.dataType = odmTypeToTableauType(dataType);
-
+                
                 fields.push(f);
 
                 if (fields.length === 1){ // i.e. directly after record id field...
