@@ -86,6 +86,14 @@
 			"default": "Raw data or labels?"
 		},
 		{
+			"key": "connector-page-fieldformat-label",
+			"name": "Connector page export field format field label",
+			"required": true,
+			"allow-project-overrides": false,
+			"type": "text",
+			"default": "Variable name or field label?"
+		},
+		{
 			"key": "connector-page-dag-label",
 			"name": "Connector page include DAG field label",
 			"required": true,
