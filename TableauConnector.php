@@ -67,6 +67,7 @@ class TableauConnector extends AbstractExternalModule
                 $pageTitle = $this->getSystemSettingOrDefault('connector-page-title');
                 $instructionText = $this->getSystemSettingOrDefault('connector-page-instruction-text');
                 $formatLabelText = $this->getSystemSettingOrDefault('connector-page-format-label');
+                $fieldFormatLabelText = $this->getSystemSettingOrDefault('connector-page-fieldformat-label');
                 $dagLabelText = $this->getSystemSettingOrDefault('connector-page-dag-label');
                 $tokenLabelText = $this->getSystemSettingOrDefault('connector-page-token-label');
                 $fieldListLabelText = $this->getSystemSettingOrDefault('connector-page-fieldlist-label');
@@ -97,6 +98,13 @@ class TableauConnector extends AbstractExternalModule
         <span class="form-control text-left">
           <label class="radio-inline"><input type="radio" name="raworlabel" value="raw" checked>raw</label>
           <label class="radio-inline"><input type="radio" name="raworlabel" value="label">label</label>
+        </span>
+      </div>
+      <div class="input-group">
+        <span class="input-group-addon" style=""><?php echo $fieldFormatLabelText;?></span>
+        <span class="form-control text-left">
+          <label class="radio-inline"><input type="radio" name="varorlabel" value="var" checked>variable</label>
+          <label class="radio-inline"><input type="radio" name="varorlabel" value="label">label</label>
         </span>
       </div>
       <div class="input-group">
@@ -190,6 +198,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                 type: 'flat',
                 fields: fieldList,
                 rawOrLabel: connectionData.raworlabel,
+                varOrLabel: connectionData.varorlabel,
                 rawOrLabelHeaders: 'raw',
                 exportCheckboxLabel: false,
                 exportSurveyFields: connectionData.surveyfields,
@@ -248,7 +257,12 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
                 var f = {};
                 f.id = rcExportVarname;
-                f.alias = rcExportVarname;
+
+		if (connectionData.varorlabel==='var') {
+		  f.alias = rcExportVarname;
+		} else {
+		  f.alias = varNode.find( 'TranslatedText' ).text();
+		}		  
                 f.description = varNode.find( 'TranslatedText' ).text();
 
                 var dataType = 'string';
@@ -258,7 +272,10 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                 }
 
                 if (rcFType==='checkbox') {
-                    f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
+		  if (connectionData.varorlabel==='label') {
+		    f.alias = f.description+' (choice='+getCheckboxChoiceLabel($response, rcExportVarname)+')';
+		  }		  
+		  f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
                 }
                 
                 f.dataType = odmTypeToTableauType(dataType);
@@ -343,6 +360,9 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
         $("#submitButton").click(function() {
             var exportFormat = $("input[name=\"raworlabel\"]:checked").val();
             exportFormat = (exportFormat==='label') ? exportFormat : 'raw';
+
+            var exportFieldFormat = $("input[name=\"varorlabel\"]:checked").val();
+            exportFieldFormat = (exportFieldFormat==='label') ? exportFieldFormat : 'var';
             
             var includeDag = ("1" == $("input[name=\"incldag\"]:checked").val());
 
@@ -356,6 +376,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
  */
             var connectionData = {
                 raworlabel: exportFormat,
+                varorlabel: exportFieldFormat,
                 surveyfields: false, // can't yet tell from odm xml whiat instruments are surveys
                 dags: includeDag,
                 token: $("input#token").val(),
