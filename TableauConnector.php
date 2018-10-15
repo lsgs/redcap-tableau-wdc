@@ -333,12 +333,13 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 
     function odmTypeToTableauType(dtype) {
         switch (dtype) {
-            case 'integer': return tableau.dataTypeEnum.int; break;
+            case 'integer': return tableau.dataTypeEnum.string; break;
             case 'text': return tableau.dataTypeEnum.string; break;
-            case 'float': return tableau.dataTypeEnum.float; break;
+            case 'float': return tableau.dataTypeEnum.string; break;
             case 'date': return tableau.dataTypeEnum.date; break;
             case 'datetime': return tableau.dataTypeEnum.datetime; break;
-            case 'boolean': return tableau.dataTypeEnum.bool; break;
+            case 'partialDatetime': return tableau.dataTypeEnum.datetime; break;
+            case 'boolean': return tableau.dataTypeEnum.string; break;
             default: return tableau.dataTypeEnum.string;
         }
     };
