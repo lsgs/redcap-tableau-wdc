@@ -75,8 +75,9 @@ class TableauConnector extends AbstractExternalModule
                 $librarySrc = $this->getSystemSettingOrDefault('tableau-wdc-js-src');
 ?>
 <style type="text/css">
-    .input-group { margin:20px 0; }
-    .input-group-addon { min-width:220px; text-align:left; }
+    /*.input-group { margin:20px 0; }*/
+    .input-group-prepend { min-width:250px; }
+    .input-group-text { min-width:250px; }
 </style>
 <div class="row">
   <div class="col-sm-12 text-center">
@@ -89,40 +90,52 @@ class TableauConnector extends AbstractExternalModule
     <p class="text-center"><?php echo $instructionText;?></p>
     <div class="form-group">
       <input type="hidden" id="url" value="<?php echo APP_PATH_WEBROOT_FULL.'api/';?>">
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $tokenLabelText;?></span>
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $tokenLabelText;?></span>
+        </div>
         <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
       </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $formatLabelText;?></span>
-        <span class="form-control text-left">
-          <label class="radio-inline"><input type="radio" name="raworlabel" value="raw" checked>raw</label>
-          <label class="radio-inline"><input type="radio" name="raworlabel" value="label">label</label>
-        </span>
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $formatLabelText;?></span>
+        </div>
+        <div class="form-control">
+          <label class="form-check-label form-check-inline"><input type="radio" name="raworlabel" value="raw" class="form-check-input" checked>raw</label>
+          <label class="form-check-label form-check-inline"><input type="radio" name="raworlabel" value="label" class="form-check-input">label</label>
+        </div>
       </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $fieldFormatLabelText;?></span>
-        <span class="form-control text-left">
-          <label class="radio-inline"><input type="radio" name="varorlabel" value="var" checked>variable</label>
-          <label class="radio-inline"><input type="radio" name="varorlabel" value="label">label</label>
-        </span>
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $fieldFormatLabelText;?></span>
+        </div>
+        <div class="form-control">
+          <label class="form-check-label form-check-inline"><input type="radio" name="varorlabel" value="var" class="form-check-input" checked>variable</label>
+          <label class="form-check-label form-check-inline"><input type="radio" name="varorlabel" value="label" class="form-check-input">label</label>
+        </div>
       </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $dagLabelText;?></span>
-        <span class="form-control text-left">
-          <label class="radio-inline"><input type="radio" name="incldag" value="0" checked>no</label>
-          <label class="radio-inline"><input type="radio" name="incldag" value="1">yes</label>
-        </span>
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $dagLabelText;?></span>
+        </div>
+        <div class="form-control">
+          <label class="form-check-label form-check-inline"><input type="radio" name="incldag" value="0" class="form-check-input" checked>no</label>
+          <label class="form-check-label form-check-inline"><input type="radio" name="incldag" value="1" class="form-check-input">yes</label>
+        </div>
       </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $fieldListLabelText;?></span>
-        <input type="text" class="form-control" id="fieldList" placeholder="[Optional] comma- or space-separated list of export field names">
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $fieldListLabelText;?></span>
+        </div>
+        <input type="text" class="form-control" id="fieldList" placeholder="Comma- or space-separated list of export field names">
       </div>
-      <div class="input-group">
-        <span class="input-group-addon" style=""><?php echo $filterLogicLabelText;?></span>
-        <input type="text" class="form-control" id="filterLogic" placeholder="[Optional] REDCap-style filter logic expression">
+      <div class="input-group mb-2">
+        <div class="input-group-prepend">
+            <span class="input-group-text" style=""><?php echo $filterLogicLabelText;?></span>
+        </div>
+        <input type="text" class="form-control" id="filterLogic" placeholder="REDCap-style filter logic expression">
       </div>
-      <div class="text-center">
+      <div class="text-center mb-2">
         <button class="btn btn-primary" id="submitButton" type="button">Submit</button>
       </div>
     </div>
