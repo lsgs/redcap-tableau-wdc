@@ -6,7 +6,7 @@
  * Connector Documentation:
  *   https://github.com/tableau/webdataconnector/blob/master/docs/wdc_tutorial.md
  *   https://blog.clairvoyantsoft.com/setting-up-a-tableau-web-data-connector-62147e4bc4bf
- * TODO: 
+ * TODO:
  * - Options for different export types: metadata, report, field/record filters
  *   (may require additional content in Project ODM XML e.g. report list, indication
  *   of which instruments are surveys.
@@ -26,7 +26,7 @@ class TableauConnector extends AbstractExternalModule
         }
 
         /**
-         * Print the page of instructions 
+         * Print the page of instructions
          */
         public function printInstructionsPageContent() {
                 $pid=PROJECT_ID;
@@ -51,17 +51,17 @@ class TableauConnector extends AbstractExternalModule
                         $config = $this->getSettingConfig($key);
                         if (array_key_exists('default', $config)) {
                                 $value = $config['default'];
-                        } 
+                        }
                 }
                 return $value;
         }
 
         /**
-         * Print the module plugin page html content 
+         * Print the module plugin page html content
          */
         public function printConnectorPageContent() {
                 global $login_logo, $institution;
-                
+
                 $logoImg = (trim($login_logo)=="") ? "" : "<img src=\"$login_logo\" title=\"$institution\" alt=\"$institution\" style='max-width:850px;'>";
                 $institution = js_escape2(strip_tags(label_decode($institution)));
                 $pageTitle = $this->getSystemSettingOrDefault('connector-page-title');
@@ -152,7 +152,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
     // Define the schema
     myConnector.getSchema = function(schemaCallback) {
         var connectionData = JSON.parse(tableau.connectionData);
-        
+
         $.ajax({
             url: connectionData.url,
             type: "POST",
@@ -182,8 +182,8 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
     // Download the data
     myConnector.getData = function(table, doneCallback) {
         var connectionData = JSON.parse(tableau.connectionData);
-        
-        // if subset of fields is specified, look for any checkbox columns 
+
+        // if subset of fields is specified, look for any checkbox columns
         // and swap out for the checkbox field name
         var fieldList = [];
         if (connectionData.fieldList.length>0) {
@@ -198,7 +198,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                 }
             });
         }
-        
+
         var tableData = [];
         $.ajax({
             url: connectionData.url,
@@ -255,9 +255,9 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             var rcFType = varNode.attr('redcap:FieldType');
 
             if (rcFType !== 'descriptive') {
-                if (fields.length>0 && filterFields && 
+                if (fields.length>0 && filterFields &&
                         $.inArray(rcExportVarname, connectionData.fieldList)===-1) {
-                    if (rcFType==='checkbox') { 
+                    if (rcFType==='checkbox') {
                         // if the user has specified the checkbox variable name rather than full export names (with ___) then still allow
                         var cbNameParts = rcExportVarname.split('___');
                         if ($.inArray(cbNameParts[0], connectionData.fieldList)===-1) {
@@ -266,7 +266,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
                     } else {
                         return; // if field list specified, skip if current field is not listed
                     }
-                } 
+                }
 
                 var f = {};
                 f.id = rcExportVarname;
@@ -275,24 +275,29 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 		  f.alias = rcExportVarname;
 		} else {
 		  f.alias = varNode.find( 'TranslatedText' ).text();
-		}		  
+		}
                 f.description = varNode.find( 'TranslatedText' ).text();
 
                 var dataType = 'string';
 
-                if (connectionData.raworlabel==='raw') { 
+                if (connectionData.raworlabel==='raw') {
                     dataType = varNode.attr('DataType');
                 }
 
                 if (rcFType==='checkbox') {
 		  if (connectionData.varorlabel==='label') {
 		    f.alias = f.description+' (choice='+getCheckboxChoiceLabel($response, rcExportVarname)+')';
-		  }		  
+		  }
+
+                  // Set raw value of checkbox fields to an int
+                  else {
+                      dataType = 'integer';
+                  }
 		  f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
                 }
-                
+
                 f.dataType = odmTypeToTableauType(dataType);
-                
+
                 fields.push(f);
 
                 if (fields.length === 1){ // i.e. directly after record id field...
@@ -345,8 +350,9 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
     };
 
     function odmTypeToTableauType(dtype) {
+
         switch (dtype) {
-            case 'integer': return tableau.dataTypeEnum.string; break;
+            case 'integer': return tableau.dataTypeEnum.int; break;
             case 'text': return tableau.dataTypeEnum.string; break;
             case 'float': return tableau.dataTypeEnum.string; break;
             case 'date': return tableau.dataTypeEnum.date; break;
@@ -356,33 +362,33 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             default: return tableau.dataTypeEnum.string;
         }
     };
-    
+
     function getCheckboxChoiceLabel($response, rcExportVarname) {
         var choiceOptionString = $response.find( 'CodeList[OID="'+rcExportVarname+'.choices"]' ).attr('redcap:CheckboxChoices');
         var choiceVarVal = rcExportVarname.split('___');
         var choiceLabel = choiceVarVal;
         choiceOptionString.split(' | ').forEach(function(c) {
             if (c.lastIndexOf(choiceVarVal[1]+', ', 0)===0) { // if (c.startsWith(choiceVarVal[1]+', ')) { // do not use startsWith() !
-                choiceLabel = c.replace(choiceVarVal[1]+', ', ''); 
+                choiceLabel = c.replace(choiceVarVal[1]+', ', '');
             }
         });
         return choiceLabel;
     }
-    
+
     $(document).ready(function (){
-        
+
         $("#submitButton").click(function() {
             var exportFormat = $("input[name=\"raworlabel\"]:checked").val();
             exportFormat = (exportFormat==='label') ? exportFormat : 'raw';
 
             var exportFieldFormat = $("input[name=\"varorlabel\"]:checked").val();
             exportFieldFormat = (exportFieldFormat==='label') ? exportFieldFormat : 'var';
-            
+
             var includeDag = ("1" == $("input[name=\"incldag\"]:checked").val());
 
             var fields = $("input#fieldList").val();
             var fieldList = (fields.trim().length>0) ? fields.split(/[ ,\t]+/) : [];
-/* Passing tableau.connectionData as an object works in the simulator but not in Tableau. 
+/* Passing tableau.connectionData as an object works in the simulator but not in Tableau.
  * Debugging shows tableau.connectionData = "[object Object]" i.e. that string, not the object!
  * (https://tableau.github.io/webdataconnector/docs/wdc_debugging)
  * Passing tableau.connectionData as a string is a workaround, hence:
