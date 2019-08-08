@@ -222,7 +222,12 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
             dataType: "json",
             success: function(resp){
                 resp.forEach(function(record){
-                    tableData.push(record);
+		    $.each(record, function(key, value) {
+			if (value === "" || value === null) {
+			  delete record[key];
+			    }
+		      });
+		     tableData.push(record);
                 });
                 table.appendRows(tableData);
                 doneCallback();
@@ -289,10 +294,6 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
 		    f.alias = f.description+' (choice='+getCheckboxChoiceLabel($response, rcExportVarname)+')';
 		  }
 
-                  // Set raw value of checkbox fields to an int
-                  else {
-                      dataType = 'integer';
-                  }
 		  f.description = getCheckboxChoiceLabel($response, rcExportVarname)+' | '+f.description;
                 }
 
@@ -354,11 +355,11 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
         switch (dtype) {
             case 'integer': return tableau.dataTypeEnum.int; break;
             case 'text': return tableau.dataTypeEnum.string; break;
-            case 'float': return tableau.dataTypeEnum.string; break;
+            case 'float': return tableau.dataTypeEnum.float; break;
             case 'date': return tableau.dataTypeEnum.date; break;
             case 'datetime': return tableau.dataTypeEnum.datetime; break;
             case 'partialDatetime': return tableau.dataTypeEnum.datetime; break;
-            case 'boolean': return tableau.dataTypeEnum.string; break;
+            case 'boolean': return tableau.dataTypeEnum.int; break;
             default: return tableau.dataTypeEnum.string;
         }
     };
