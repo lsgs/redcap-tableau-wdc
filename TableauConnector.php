@@ -35,13 +35,20 @@ class TableauConnector extends AbstractExternalModule
                 $url = $this->getUrl('wdc.php', true, true);
                 $url = str_replace('&pid='.PROJECT_ID, '', $url);
                 echo renderPageTitle($this->getModuleName());
-                echo "<div class='panel panel-primary' style='margin: 2em 0;'><div class='panel-heading'>$url</div></div>";
-                echo "<div class='panel panel-default'><div class='panel-heading'><strong>$panelTitle</strong></div><div class='panel-body wdc-instructions-text'>$instructionText</div>";
                 ?>
-<style type="text/css">
-    .wdc-instructions-text { }
-    .wdc-instructions-text li { margin: 1em 0; }
-</style>
+                <div class="card wdc-instructions-card">
+                    <h5 class="card-header"><?php echo $panelTitle;?></h5>
+                    <div class="card-body">
+                      <h5 class="card-title wdc-instructions-title"><?php echo $url;?></h5>
+                      <div class="card-text wdc-instructions-text"><?php echo $instructionText;?></div>
+                    </div>
+                </div>
+                <style type="text/css">
+                    .wdc-instructions-card { width: max-content; }
+                    .wdc-instructions-title { font-size:100%; font-weight:bold; }
+                    .wdc-instructions-text > ol { margin-bottom: 0; padding-left: 1rem; }
+                    .wdc-instructions-text > ol > li { margin-top: 0.5rem; }
+                </style>
                 <?php
         }
 

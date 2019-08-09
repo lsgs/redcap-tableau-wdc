@@ -30,14 +30,14 @@
 		],
 		"control-center": [
 			{
-				"name": "Tableau Connector Instructions",
+				"name": "<i class='fas fa-chart-bar'></i> Tableau Connector Instructions",
 				"icon": "computer",
 				"url": "index.php"
 			}
 		],
 		"project": [
 			{
-				"name": "Tableau Connector Instructions",
+				"name": "<i class='fas fa-chart-bar'></i> Tableau Connector Instructions",
 				"icon": "computer",
 				"url": "index.php"
 			}
