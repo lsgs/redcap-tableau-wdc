@@ -35,13 +35,20 @@ class TableauConnector extends AbstractExternalModule
                 $url = $this->getUrl('wdc.php', true, true);
                 $url = str_replace('&pid='.PROJECT_ID, '', $url);
                 echo renderPageTitle($this->getModuleName());
-                echo "<div class='panel panel-primary' style='margin: 2em 0;'><div class='panel-heading'>$url</div></div>";
-                echo "<div class='panel panel-default'><div class='panel-heading'><strong>$panelTitle</strong></div><div class='panel-body wdc-instructions-text'>$instructionText</div>";
                 ?>
-<style type="text/css">
-    .wdc-instructions-text { }
-    .wdc-instructions-text li { margin: 1em 0; }
-</style>
+                <div class="card wdc-instructions-card">
+                    <h5 class="card-header"><?php echo $panelTitle;?></h5>
+                    <div class="card-body">
+                      <h5 class="card-title wdc-instructions-title"><?php echo $url;?></h5>
+                      <div class="card-text wdc-instructions-text"><?php echo $instructionText;?></div>
+                    </div>
+                </div>
+                <style type="text/css">
+                    .wdc-instructions-card { width: max-content; }
+                    .wdc-instructions-title { font-size:100%; font-weight:bold; }
+                    .wdc-instructions-text > ol { margin-bottom: 0; padding-left: 1rem; }
+                    .wdc-instructions-text > ol > li { margin-top: 0.5rem; }
+                </style>
                 <?php
         }
 
@@ -90,13 +97,13 @@ class TableauConnector extends AbstractExternalModule
     <p class="text-center"><?php echo $instructionText;?></p>
     <div class="form-group">
       <input type="hidden" id="url" value="<?php echo APP_PATH_WEBROOT_FULL.'api/';?>">
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $tokenLabelText;?></span>
         </div>
         <input type="text" class="form-control" id="token" placeholder="A0B1C2D3E4...">
       </div>
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $formatLabelText;?></span>
         </div>
@@ -105,7 +112,7 @@ class TableauConnector extends AbstractExternalModule
           <label class="form-check-label form-check-inline"><input type="radio" name="raworlabel" value="label" class="form-check-input">label</label>
         </div>
       </div>
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $fieldFormatLabelText;?></span>
         </div>
@@ -114,7 +121,7 @@ class TableauConnector extends AbstractExternalModule
           <label class="form-check-label form-check-inline"><input type="radio" name="varorlabel" value="label" class="form-check-input">label</label>
         </div>
       </div>
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $dagLabelText;?></span>
         </div>
@@ -123,13 +130,13 @@ class TableauConnector extends AbstractExternalModule
           <label class="form-check-label form-check-inline"><input type="radio" name="incldag" value="1" class="form-check-input">yes</label>
         </div>
       </div>
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $fieldListLabelText;?></span>
         </div>
         <input type="text" class="form-control" id="fieldList" placeholder="Comma- or space-separated list of export field names">
       </div>
-      <div class="input-group mb-2">
+      <div class="x-input-group mb-2">
         <div class="input-group-prepend">
             <span class="input-group-text" style=""><?php echo $filterLogicLabelText;?></span>
         </div>
