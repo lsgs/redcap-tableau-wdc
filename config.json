@@ -131,7 +131,8 @@
 			"required": true,
 			"allow-project-overrides": false,
 			"type": "text",
-			"default": "https://connectors.tableau.com/libs/tableauwdc-2.0.8.min.js"
+			"default": "https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js
+"
 		}
 	],
 
