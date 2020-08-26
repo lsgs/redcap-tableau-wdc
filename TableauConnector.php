@@ -375,7 +375,7 @@ if (typeof tableau==='undefined') { alert('Error: could not download tableau con
         var choiceOptionString = $response.find( 'CodeList[OID="'+rcExportVarname+'.choices"]' ).attr('redcap:CheckboxChoices');
         var choiceVarVal = rcExportVarname.split('___');
         var choiceLabel = choiceVarVal;
-        choiceOptionString.split(' | ').forEach(function(c) {
+        choiceOptionString.split(/\s*\|\s*/g).forEach(function(c) {
             if (c.lastIndexOf(choiceVarVal[1]+', ', 0)===0) { // if (c.startsWith(choiceVarVal[1]+', ')) { // do not use startsWith() !
                 choiceLabel = c.replace(choiceVarVal[1]+', ', '');
             }
