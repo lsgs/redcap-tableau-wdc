@@ -14,7 +14,7 @@
 	"permissions": [
 	],
 
-	"description": "Enable Tableau (v10.0+) users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations. (Note: The connector can be utilised without enabling this module for a particular project. Enabling this module for a project just makes the Instructions page available in the project page menu.)",
+	"description": "From REDCap v11.2.0 this module's functionality is incorporated within REDCap. Go to your project's \"Other Export Options\" page for instructions.<br>This module enable Tableau (v10.0+) users to connect Tableau to a REDCap project for which they have an API token. Project data will be exported on demand and be available for use within Tableau to produce summaries and visualisations. (Note: The connector can be utilised without enabling this module for a particular project. Enabling this module for a project just makes the Instructions page available in the project page menu.)",
 
         "no-auth-pages": [
                 "wdc"

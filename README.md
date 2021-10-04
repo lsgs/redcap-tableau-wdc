@@ -4,6 +4,12 @@
 Luke Stevens, Murdoch Children's Research Institute https://www.mcri.edu.au
 
 ********************************************************************************
+## REDCap Version 11.2.0+
+
+As of REDCap version 11.2.0 this module's functionality is included within REDCap.
+Go to the "Other Export Options" page in your project for instructions.
+
+********************************************************************************
 ## Summary
 
 A REDCap External Module that provides a link to use to create a Tableau Web
